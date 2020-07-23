@@ -1,7 +1,7 @@
 package main
 import (
 	"fmt"
-	"gitlab.nobody.run/tbi/LeakIXClient"
+	"github.com/LeakIX/LeakIXClient"
 )
 
 func main(){
