@@ -11,13 +11,13 @@ import (
 
 func main() {
 	var scope string
-	flag.StringVar(&scope, "s", "leak", "Specify scope, default to leak")
+	flag.StringVar(&scope, "s", "leak", "Specify scope")
 	var query string
-	flag.StringVar(&query, "q", "*", "Specify search query, default to *")
+	flag.StringVar(&query, "q", "*", "Specify search query")
 	var outputTemplate string
-	flag.StringVar(&outputTemplate, "t", "{{ .Ip }}:{{ .Port }}", "Specify output template, default to \"{{ .Ip }}:{{ .Port }}\"")
+	flag.StringVar(&outputTemplate, "t", "{{ .Ip }}:{{ .Port }}", "Specify output template")
 	var limit int
-	flag.IntVar(&limit, "l", 100, "Limit results output, default to 100")
+	flag.IntVar(&limit, "l", 100, "Limit results output")
 
 	flag.Usage = func() {
 		fmt.Printf("Usage of leakix: \n")
