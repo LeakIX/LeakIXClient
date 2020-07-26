@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"gitlab.nobody.run/tbi/LeakIXClient"
-	"html/template"
+	"github.com/LeakIX/LeakIXClient"
+	"text/template"
 	"log"
 	"os"
 )
