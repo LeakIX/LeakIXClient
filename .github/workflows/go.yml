@@ -21,10 +21,14 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
       with:
-        path: /home/runner/go/src/github.com/LeakIX/LeakIXClient
+        path: ${GITHUB_WORKSPACE}/src/github.com/LeakIX/LeakIXClient
     - name: Deps
       run: go get -v ./cmd/leakix
-      working-directory: /home/runner/go/src/github.com/LeakIX/LeakIXClient
+      working-directory: ${GITHUB_WORKSPACE}/src/github.com/LeakIX/LeakIXClient
+      env:
+        GOPATH: ${GITHUB_WORKSPACE}
     - name: Build
       run: go build -v ./cmd/leakix
-      working-directory: /home/runner/go/src/github.com/LeakIX/LeakIXClient
+      working-directory: ${GITHUB_WORKSPACE}/src/github.com/LeakIX/LeakIXClient
+      env:
+        GOPATH: ${GITHUB_WORKSPACE}
