@@ -9,7 +9,7 @@ This is a Go library making queries to LeakIX easier.
 package main
 import (
 	"fmt"
-	"gitlab.nobody.run/tbi/LeakIXClient"
+	"github.com/LeakIX/LeakIXClient"
 )
 
 func main(){
