@@ -55,7 +55,6 @@ func (sc *SearchResultsClient) SearchResult() *SearchResult {
 func GetSearchResults(scope string, query string, page int) ([]*SearchResult, error) {
 	url := fmt.Sprintf(
 		"https://leakix.net/search?scope=%s&q=%s&page=%d", url2.QueryEscape(scope), url2.QueryEscape(query), page)
-	log.Println(url)
 	var searchResults []*SearchResult
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("Accept", "application/json")
