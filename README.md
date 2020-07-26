@@ -10,13 +10,13 @@ Usage of leakix:
   ./leakix -q '*' -l 200
 
   -l int
-        Limit results output, default to 100 (default 100)
+        Limit results output (default 100)
   -q string
-        Specify search query, default to * (default "*")
+        Specify search query (default "*")
   -s string
-        Specify scope, default to leak (default "leak")
+        Specify scope (default "leak")
   -t string
-        Specify output template, default to "{{ .Ip }}:{{ .Port }}" (default "{{ .Ip }}:{{ .Port }}")
+        Specify output template (default "{{ .Ip }}:{{ .Port }}")
 
 $ leakix -l 2 -q "protocol:web AND plugin:GitConfigPlugin" -t "{{ .Ip }}:{{ .Port }} : {{ .Data }}"
 178.62.217.44:80 : Found git deployment configuration
