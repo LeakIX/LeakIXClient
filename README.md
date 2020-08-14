@@ -7,17 +7,19 @@ This is a Go CLI & library making queries to LeakIX easier.
 ```sh
 $ leakix -h
 Usage of leakix: 
-  ./leakix -q '*' -l 200
 
+  -j    JSON mode, (excludes -t)
   -l int
         Limit results output (default 100)
   -q string
-        Specify search query (default "*")
+        Search mode, specify search query (default "*")
+  -r    Realtime mode, (excludes -q)
   -s string
         Specify scope (default "leak")
   -t string
         Specify output template (default "{{ .Ip }}:{{ .Port }}")
 
+$ # Example query on the index
 $ leakix -l 2 -q "protocol:web AND plugin:GitConfigPlugin" -t "{{ .Ip }}:{{ .Port }} : {{ .Data }}"
 178.62.217.44:80 : Found git deployment configuration
 [core]
@@ -44,6 +46,16 @@ $ leakix -l 2 -q "protocol:web AND plugin:GitConfigPlugin" -t "{{ .Ip }}:{{ .Por
 [branch "staging"]
 	remote = origin
 	merge = refs/heads/staging
+
+$ # Stream results in realtime from the engine, no filtering
+$ ./leakix -r -s services -l 0
+14.167.7.149:81
+54.249.38.136:9200
+23.65.39.190:80
+[2a01:4f8:10a:1b5a::2]:80
+23.225.38.43:3306
+210.16.68.51:80
+...keeps streaming...
 ```
 
 ## Library usage
@@ -55,7 +67,7 @@ import (
 	"github.com/LeakIX/LeakIXClient"
 )
 
-func main(){
+func DoSearch(){
 	// Create a searcher
 	LeakIXSearch := LeakIXClient.SearchResultsClient{
 		Scope: "leak",
@@ -69,4 +81,18 @@ func main(){
 	}
 }
 
+
+func LiveStream() {
+	// Get a channel from the websocket
+	serviceChannel, err := LeakIXClient.GetChannel("services")
+	if err != nil {
+		log.Println("Websocket connection error:")
+		log.Fatal(err)
+	}
+	for {
+		// Print everything received on the channel
+		service := <- serviceChannel
+		log.Println(service.Ip)
+	}
+}
 ```

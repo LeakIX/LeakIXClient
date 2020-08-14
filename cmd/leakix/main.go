@@ -1,52 +1,102 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/LeakIX/LeakIXClient"
-	"text/template"
 	"log"
 	"os"
+	"text/template"
 )
 
-func main() {
-	var scope string
-	flag.StringVar(&scope, "s", "leak", "Specify scope")
-	var query string
-	flag.StringVar(&query, "q", "*", "Specify search query")
-	var outputTemplate string
-	flag.StringVar(&outputTemplate, "t", "{{ .Ip }}:{{ .Port }}", "Specify output template")
-	var limit int
-	flag.IntVar(&limit, "l", 100, "Limit results output")
+// It's all sequential, Couldn't care sorry :
+var outputJson bool
+var scope string
+var query string
+var liveStream bool
+var outputTemplate string
+var limit int
+var tmpl *template.Template
+var err error
 
+func main() {
+	//Config our app
+	err = nil
+	flag.StringVar(&scope, "s", "leak", "Specify scope")
+	flag.StringVar(&query, "q", "*", "Search mode, specify search query")
+	flag.BoolVar(&liveStream, "r", false, "Realtime mode, (excludes -q)")
+	flag.BoolVar(&outputJson, "j", false, "JSON mode, (excludes -t)")
+	flag.StringVar(&outputTemplate, "t", "{{ .Ip }}:{{ .Port }}", "Specify output template")
+	flag.IntVar(&limit, "l", 100, "Limit results output")
 	flag.Usage = func() {
 		fmt.Printf("Usage of leakix: \n")
-		fmt.Printf("  ./leakix -q '*' -l 200\n\n")
+		fmt.Printf("  ./leakix -q '*' -s leaks -l 200\n\n")
+		fmt.Printf("  ./leakix -r -s services -l 0\n\n")
 		flag.PrintDefaults()
 	}
-
 	flag.Parse()
-
-	searcher := LeakIXClient.SearchResultsClient{
-		Scope:         scope,
-		Query:         query,
-	}
-
-	tmpl, err := template.New("output").Parse(outputTemplate + "\n")
+	tmpl, err = template.New("output").Parse(outputTemplate + "\n")
 	if err != nil {
 		log.Println("Template error :")
 		log.Fatal(err)
 	}
+
+	// Run the right thing
+	if liveStream {
+		LiveStream()
+	} else {
+		Search()
+	}
+
+}
+
+func Search() {
+	searcher := LeakIXClient.SearchResultsClient{
+		Scope:         scope,
+		Query:         query,
+	}
 	count := 0
 	for searcher.Next() {
 		count++
-		err = tmpl.Execute(os.Stdout, searcher.SearchResult())
-		if err != nil {
-			log.Println("Template error :")
-			log.Fatal(err)
-		}
-		if count >= limit {
+		OutputSearchResult(searcher.SearchResult())
+		if count >= limit || count >= 10000 {
 			os.Exit(0)
 		}
 	}
 }
+
+func LiveStream() {
+	count := 0
+	serviceChannel, err := LeakIXClient.GetChannel(scope)
+	if err != nil {
+		log.Println("Websocket connection error:")
+		log.Fatal(err)
+	}
+	for {
+		service := <- serviceChannel
+		count++
+		OutputSearchResult(service)
+		if count >= limit && limit != 0 {
+			os.Exit(0)
+		}
+	}
+}
+
+func OutputSearchResult(searchResult LeakIXClient.SearchResult) {
+	if outputJson {
+		jsonBody, err := json.Marshal(searchResult)
+		if err != nil {
+			log.Println("JSON error :")
+			log.Fatal(err)
+		}
+		fmt.Println(string(jsonBody))
+	} else {
+		err := tmpl.Execute(os.Stdout, searchResult)
+		if err != nil {
+			log.Println("Template error :")
+			log.Fatal(err)
+		}
+	}
+}
+
