@@ -77,7 +77,7 @@ func GetSearchResults(scope string, query string, page int) ([]SearchResult, err
 
 func GetChannel(scope string) (chan SearchResult, error) {
 	channel := make(chan SearchResult)
-	wsConnection, _, err := websocket.DefaultDialer.Dial("wss://staging.leakix.net/ws/" + scope, map[string][]string{"Origin":{"staging.leakix.net:443"}})
+	wsConnection, _, err := websocket.DefaultDialer.Dial("wss://leakix.net/ws/" + scope, map[string][]string{"Origin":{"leakix.net:443"}})
 	if err != nil {
 		return nil, err
 	}
