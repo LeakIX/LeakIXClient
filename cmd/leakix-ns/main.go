@@ -29,26 +29,26 @@ func main() {
 }
 
 type App struct {
-	Domain string
+	Domain     string
 	OutputJson bool
-	Limit int
-	Searcher *LeakIXClient.SearchResultsClient
-	Reverse map[string][]LeakIXClient.SearchResult
-	Forward map[string][]LeakIXClient.SearchResult
+	Limit      int
+	Searcher   *LeakIXClient.SearchResultsClient
+	Reverse    map[string][]LeakIXClient.SearchResult
+	Forward    map[string][]LeakIXClient.SearchResult
 }
 
 func (app *App) Run() {
 	app.Searcher = &LeakIXClient.SearchResultsClient{
-		Scope:         "service",
-		Query:         fmt.Sprintf("hostname:\"%s\" OR reverse:\"%s\" OR ip:\"%s\"", app.Domain, app.Domain, app.Domain),
+		Scope: "service",
+		Query: fmt.Sprintf("hostname:\"%s\" OR reverse:\"%s\" OR ip:\"%s\"", app.Domain, app.Domain, app.Domain),
 	}
 	app.Reverse = make(map[string][]LeakIXClient.SearchResult)
 	app.Forward = make(map[string][]LeakIXClient.SearchResult)
 	count := 0
 	for app.Searcher.Next() {
-		if ! strings.Contains(app.Searcher.SearchResult().Reverse, app.Domain) &&
-			! strings.Contains(app.Searcher.SearchResult().Hostname, app.Domain) &&
-			! strings.Contains(app.Searcher.SearchResult().Ip, app.Domain){
+		if !strings.Contains(app.Searcher.SearchResult().Reverse, app.Domain) &&
+			!strings.Contains(app.Searcher.SearchResult().Hostname, app.Domain) &&
+			!strings.Contains(app.Searcher.SearchResult().Ip, app.Domain) {
 			continue
 		}
 		count++
