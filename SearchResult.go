@@ -18,6 +18,8 @@ type SearchResult struct {
 	GeoLocation GeoLocation               `json:"geoip"`
 	Credentials []*HostServiceCredentials `json:"credentials"`
 	Software    Software                  `json:"software"`
+	Reverse     string                    `json:"reverse"`
+	Hostname    string                    `json:"hostname"`
 }
 
 type HostServiceCredentials struct {
