@@ -33,6 +33,7 @@ type SearchResultsClient struct {
 	Page          int
 	ApiKey        string
 	Endpoint      string
+	LastError     error
 }
 
 const defaultEndpoint = "https://leakix.net"
@@ -45,12 +46,13 @@ func (sc *SearchResultsClient) GetEndpoint() string {
 }
 
 func (sc *SearchResultsClient) Next() bool {
+	var results []SearchResult
 	if len(sc.SearchResults) > sc.Position {
 		sc.Position++
 		return true
 	}
 	// Try to load next page
-	results, _ := sc.GetSearchResults(sc.Scope, sc.Query, sc.Page)
+	results, sc.LastError = sc.GetSearchResults(sc.Scope, sc.Query, sc.Page)
 	for _, result := range results {
 		sc.SearchResults = append(sc.SearchResults, result)
 	}

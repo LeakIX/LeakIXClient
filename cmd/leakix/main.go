@@ -71,6 +71,9 @@ func Search() {
 			os.Exit(0)
 		}
 	}
+	if searcher.LastError != nil {
+		log.Println("finished with errors: " + searcher.LastError.Error())
+	}
 }
 
 func LiveStream() {
