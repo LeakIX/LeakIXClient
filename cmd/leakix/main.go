@@ -16,6 +16,8 @@ var scope string
 var query string
 var liveStream bool
 var outputTemplate string
+var apiKey string
+var endPoint string
 var limit int
 var tmpl *template.Template
 var err error
@@ -28,6 +30,9 @@ func main() {
 	flag.BoolVar(&liveStream, "r", false, "Realtime mode, (excludes -q)")
 	flag.BoolVar(&outputJson, "j", false, "JSON mode, (excludes -t)")
 	flag.StringVar(&outputTemplate, "t", "{{ .Ip }}:{{ .Port }}", "Specify output template")
+	flag.StringVar(&apiKey, "k", "", "Specify API key")
+	flag.StringVar(&endPoint, "e", "https://leakix.net", "Leakix endpoint to use")
+
 	flag.IntVar(&limit, "l", 100, "Limit results output")
 	flag.Usage = func() {
 		fmt.Printf("Usage of leakix: \n")
@@ -53,8 +58,10 @@ func main() {
 
 func Search() {
 	searcher := LeakIXClient.SearchResultsClient{
-		Scope:         scope,
-		Query:         query,
+		Scope:    scope,
+		Query:    query,
+		ApiKey:   apiKey,
+		Endpoint: endPoint,
 	}
 	count := 0
 	for searcher.Next() {
@@ -68,13 +75,17 @@ func Search() {
 
 func LiveStream() {
 	count := 0
-	serviceChannel, err := LeakIXClient.GetChannel(scope)
+	searcher := LeakIXClient.SearchResultsClient{
+		ApiKey:   apiKey,
+		Endpoint: endPoint,
+	}
+	serviceChannel, err := searcher.GetChannel(scope)
 	if err != nil {
 		log.Println("Websocket connection error:")
 		log.Fatal(err)
 	}
 	for {
-		service := <- serviceChannel
+		service := <-serviceChannel
 		count++
 		OutputSearchResult(service)
 		if count >= limit && limit != 0 {
@@ -99,4 +110,3 @@ func OutputSearchResult(searchResult LeakIXClient.SearchResult) {
 		}
 	}
 }
-

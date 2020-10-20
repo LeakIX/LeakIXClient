@@ -15,6 +15,7 @@ func main() {
 	flag.StringVar(&app.Domain, "d", "", "Specify domain")
 	flag.BoolVar(&app.OutputJson, "j", false, "JSON mode, (excludes -t)")
 	flag.IntVar(&app.Limit, "l", 100, "Limit results output")
+	flag.StringVar(&app.ApiKey, "k", "", "API Key")
 	flag.Usage = func() {
 		fmt.Printf("Usage of leakix-dns: \n")
 		fmt.Printf("  ./leakix -d <domain> -l 200\n\n")
@@ -35,12 +36,15 @@ type App struct {
 	Searcher   *LeakIXClient.SearchResultsClient
 	Reverse    map[string][]LeakIXClient.SearchResult
 	Forward    map[string][]LeakIXClient.SearchResult
+	ApiKey     string
 }
 
 func (app *App) Run() {
 	app.Searcher = &LeakIXClient.SearchResultsClient{
-		Scope: "service",
-		Query: fmt.Sprintf("hostname:\"%s\" OR reverse:\"%s\" OR ip:\"%s\"", app.Domain, app.Domain, app.Domain),
+		Scope:    "service",
+		Query:    fmt.Sprintf("hostname:\"%s\" OR reverse:\"%s\" OR ip:\"%s\"", app.Domain, app.Domain, app.Domain),
+		ApiKey:   app.ApiKey,
+		Endpoint: "https://staging.leakix.net",
 	}
 	app.Reverse = make(map[string][]LeakIXClient.SearchResult)
 	app.Forward = make(map[string][]LeakIXClient.SearchResult)

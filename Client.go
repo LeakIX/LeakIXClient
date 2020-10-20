@@ -2,6 +2,7 @@ package LeakIXClient
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"gitlab.nobody.run/tbi/core"
@@ -9,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	url2 "net/url"
+	"strings"
 	"time"
 )
 
@@ -29,6 +31,17 @@ type SearchResultsClient struct {
 	SearchResults []SearchResult
 	Position      int
 	Page          int
+	ApiKey        string
+	Endpoint      string
+}
+
+const defaultEndpoint = "https://leakix.net"
+
+func (sc *SearchResultsClient) GetEndpoint() string {
+	if len(sc.Endpoint) > 8 {
+		return sc.Endpoint
+	}
+	return defaultEndpoint
 }
 
 func (sc *SearchResultsClient) Next() bool {
@@ -37,7 +50,7 @@ func (sc *SearchResultsClient) Next() bool {
 		return true
 	}
 	// Try to load next page
-	results, _ := GetSearchResults(sc.Scope, sc.Query, sc.Page)
+	results, _ := sc.GetSearchResults(sc.Scope, sc.Query, sc.Page)
 	for _, result := range results {
 		sc.SearchResults = append(sc.SearchResults, result)
 	}
@@ -53,12 +66,13 @@ func (sc *SearchResultsClient) SearchResult() SearchResult {
 	return sc.SearchResults[sc.Position-1]
 }
 
-func GetSearchResults(scope string, query string, page int) ([]SearchResult, error) {
+func (sc *SearchResultsClient) GetSearchResults(scope string, query string, page int) ([]SearchResult, error) {
 	url := fmt.Sprintf(
-		"https://leakix.net/search?scope=%s&q=%s&page=%d", url2.QueryEscape(scope), url2.QueryEscape(query), page)
+		"%s/search?scope=%s&q=%s&page=%d", sc.GetEndpoint(), url2.QueryEscape(scope), url2.QueryEscape(query), page)
 	var searchResults []SearchResult
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("api-key", sc.ApiKey)
 	resp, err := HttpClient.Do(req)
 	if err != nil {
 		return searchResults, err
@@ -75,15 +89,24 @@ func GetSearchResults(scope string, query string, page int) ([]SearchResult, err
 	return searchResults, nil
 }
 
-func GetChannel(scope string) (chan SearchResult, error) {
+func (sc *SearchResultsClient) GetChannel(scope string) (chan SearchResult, error) {
 	channel := make(chan SearchResult)
-	wsConnection, _, err := websocket.DefaultDialer.Dial("wss://leakix.net/ws/" + scope, map[string][]string{"Origin":{"leakix.net:443"}})
+	endpointUrl, err := url2.Parse(sc.GetEndpoint())
+	if err != nil {
+		return nil, errors.New("invalid endpoint")
+	}
+	endpointUrl.Scheme = strings.Replace(endpointUrl.Scheme, "http", "ws", -1)
+	log.Println(endpointUrl.String())
+	wsConnection, _, err := websocket.DefaultDialer.Dial(endpointUrl.String()+"/ws/"+scope, map[string][]string{
+		"Origin": {endpointUrl.Host + ":" + endpointUrl.Port()},
+		"api-key":{sc.ApiKey},
+	})
 	if err != nil {
 		return nil, err
 	}
 	go func() {
 		searchResult := SearchResult{}
-		for  {
+		for {
 			err := wsConnection.ReadJSON(&searchResult)
 			if err != nil {
 				log.Println("Error parsing websocket results. Is your scope correct?")
