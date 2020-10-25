@@ -17,8 +17,8 @@ func main() {
 	flag.IntVar(&app.Limit, "l", 100, "Limit results output")
 	flag.StringVar(&app.ApiKey, "k", "", "API Key")
 	flag.Usage = func() {
-		fmt.Printf("Usage of leakix-dns: \n")
-		fmt.Printf("  ./leakix -d <domain> -l 200\n\n")
+		fmt.Printf("Usage of leakix-ns: \n")
+		fmt.Printf("  ./leakix-ns -d <domain> -l 200\n\n")
 		flag.PrintDefaults()
 	}
 	flag.Parse()
@@ -44,7 +44,7 @@ func (app *App) Run() {
 		Scope:    "service",
 		Query:    fmt.Sprintf("hostname:\"%s\" OR reverse:\"%s\" OR ip:\"%s\"", app.Domain, app.Domain, app.Domain),
 		ApiKey:   app.ApiKey,
-		Endpoint: "https://staging.leakix.net",
+		Endpoint: "https://leakix.net",
 	}
 	app.Reverse = make(map[string][]LeakIXClient.SearchResult)
 	app.Forward = make(map[string][]LeakIXClient.SearchResult)
