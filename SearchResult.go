@@ -22,5 +22,6 @@ type SearchResult struct {
 	Reverse     string                    `json:"reverse"`
 	Hostname    string                    `json:"hostname"`
 	Dataset     core.DatasetLeak		  `json:"dataset"`
+	Scheme      string					  `json:"scheme"`
 	Certificate core.HostCertificate	  `json:"certificate"`
 }
