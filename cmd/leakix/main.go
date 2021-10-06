@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/LeakIX/LeakIXClient"
+	"github.com/LeakIX/l9format"
 	"log"
 	"os"
 	"text/template"
@@ -97,7 +98,7 @@ func LiveStream() {
 	}
 }
 
-func OutputSearchResult(searchResult LeakIXClient.SearchResult) {
+func OutputSearchResult(searchResult l9format.L9Event) {
 	if outputJson {
 		jsonBody, err := json.Marshal(searchResult)
 		if err != nil {

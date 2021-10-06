@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/LeakIX/l9format"
 	"github.com/gorilla/websocket"
 	"gitlab.nobody.run/tbi/core"
 	"io/ioutil"
@@ -28,7 +29,7 @@ var HttpClient = &http.Client{
 type SearchResultsClient struct {
 	Scope         string
 	Query         string
-	SearchResults []SearchResult
+	SearchResults []l9format.L9Event
 	Position      int
 	Page          int
 	ApiKey        string
@@ -46,7 +47,7 @@ func (sc *SearchResultsClient) GetEndpoint() string {
 }
 
 func (sc *SearchResultsClient) Next() bool {
-	var results []SearchResult
+	var results []l9format.L9Event
 	if len(sc.SearchResults) > sc.Position {
 		sc.Position++
 		return true
@@ -64,14 +65,14 @@ func (sc *SearchResultsClient) Next() bool {
 	return false
 }
 
-func (sc *SearchResultsClient) SearchResult() SearchResult {
+func (sc *SearchResultsClient) SearchResult() l9format.L9Event {
 	return sc.SearchResults[sc.Position-1]
 }
 
-func (sc *SearchResultsClient) GetSearchResults(scope string, query string, page int) ([]SearchResult, error) {
+func (sc *SearchResultsClient) GetSearchResults(scope string, query string, page int) ([]l9format.L9Event, error) {
 	url := fmt.Sprintf(
 		"%s/search?scope=%s&q=%s&page=%d", sc.GetEndpoint(), url2.QueryEscape(scope), url2.QueryEscape(query), page)
-	var searchResults []SearchResult
+	var searchResults []l9format.L9Event
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("api-key", sc.ApiKey)
@@ -91,8 +92,8 @@ func (sc *SearchResultsClient) GetSearchResults(scope string, query string, page
 	return searchResults, nil
 }
 
-func (sc *SearchResultsClient) GetChannel(scope string) (chan SearchResult, error) {
-	channel := make(chan SearchResult)
+func (sc *SearchResultsClient) GetChannel(scope string) (chan l9format.L9Event, error) {
+	channel := make(chan l9format.L9Event)
 	endpointUrl, err := url2.Parse(sc.GetEndpoint())
 	if err != nil {
 		return nil, errors.New("invalid endpoint")
@@ -107,7 +108,7 @@ func (sc *SearchResultsClient) GetChannel(scope string) (chan SearchResult, erro
 		return nil, err
 	}
 	go func() {
-		searchResult := SearchResult{}
+		searchResult := l9format.L9Event{}
 		for {
 			err := wsConnection.ReadJSON(&searchResult)
 			if err != nil {
