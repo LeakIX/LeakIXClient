@@ -1,0 +1,3 @@
+## deprecated
+
+Kept as example
