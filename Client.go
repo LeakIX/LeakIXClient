@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/LeakIX/l9format"
 	"github.com/gorilla/websocket"
-	"gitlab.nobody.run/tbi/core"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,7 +14,7 @@ import (
 	"time"
 )
 
-var LeakIXProxy = &core.ProxiedPlugin{}
+var LeakIXProxy = &l9format.ServicePluginBase{}
 var LeakIXHttpTranport = &http.Transport{
 	DialContext:           LeakIXProxy.DialContext,
 	ResponseHeaderTimeout: 5 * time.Second,
@@ -85,6 +84,15 @@ func (sc *SearchResultsClient) GetSearchResults(scope string, query string, page
 	if err != nil {
 		return searchResults, err
 	}
+	if resp.StatusCode == 429 {
+		// parse wait header and try again
+		duration, err := time.ParseDuration(resp.Header.Get("x-limited-for"))
+		if err != nil {
+			panic(err)
+		}
+		time.Sleep(duration)
+		return sc.GetSearchResults(scope, query, page)
+	}
 	err = json.Unmarshal(body, &searchResults)
 	if err != nil {
 		return searchResults, err
@@ -101,8 +109,8 @@ func (sc *SearchResultsClient) GetChannel(scope string) (chan l9format.L9Event, 
 	endpointUrl.Scheme = strings.Replace(endpointUrl.Scheme, "http", "ws", -1)
 	log.Println(endpointUrl.String())
 	wsConnection, _, err := websocket.DefaultDialer.Dial(endpointUrl.String()+"/ws/"+scope, map[string][]string{
-		"Origin": {endpointUrl.Host + ":" + endpointUrl.Port()},
-		"api-key":{sc.ApiKey},
+		"Origin":  {endpointUrl.Host + ":" + endpointUrl.Port()},
+		"api-key": {sc.ApiKey},
 	})
 	if err != nil {
 		return nil, err
